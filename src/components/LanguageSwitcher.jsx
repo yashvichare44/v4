@@ -1,70 +1,101 @@
-import { useEffect, useState } from "react";
+import React, { useEffect } from 'react';
 
-const LanguageSwitcher = () => {
-  const [isLoaded, setIsLoaded] = useState(false);
-
+const GoogleTranslate = () => {
   useEffect(() => {
-    if (window.google && window.google.translate) {
-      setIsLoaded(true);
-    } else {
-      // Check if Google Translate is loaded every 500ms
-      const checkGoogleTranslate = setInterval(() => {
-        if (window.google && window.google.translate) {
-          setIsLoaded(true);
-          clearInterval(checkGoogleTranslate);
-        }
-      }, 500);
+    // Function to remove Google translate elements
+    const removeGoogleElements = () => {
+      const googleElements = [
+        '.goog-te-banner-frame',
+        '.goog-logo-link',
+        '#google_translate_element',
+        '.goog-te-balloon-frame'
+      ];
 
-      // Stop checking after 5 seconds
-      setTimeout(() => clearInterval(checkGoogleTranslate), 5000);
-    }
+      googleElements.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(el => {
+          if (el.parentNode) {
+            el.parentNode.removeChild(el);
+          }
+        });
+      });
+    };
+
+    // Load Google Translate script
+    const script = document.createElement('script');
+    script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    script.async = true;
+    document.body.appendChild(script);
+
+    // Initialize Google Translate
+    window.googleTranslateElementInit = () => {
+      new window.google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,hi,ta,te,ml,bn,kn,mr,gu',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google-translate-element');
+
+      // Remove Google elements after initialization
+      setTimeout(removeGoogleElements, 100);
+    };
+
+    // Custom CSS to suppress Google branding
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .goog-te-banner-frame, 
+      .goog-logo-link, 
+      .goog-te-balloon-frame {
+        display: none !important;
+        visibility: hidden !important;
+        position: absolute !important;
+        left: -9999px !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        opacity: 0 !important;
+      }
+
+      .goog-te-gadget {
+        color: transparent !important;
+      }
+
+      .goog-te-gadget-simple {
+        border: none !important;
+        background: none !important;
+      }
+
+      .goog-te-menu-value {
+        color: black !important;
+        font-family: inherit !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // MutationObserver to continuously remove Google elements
+    const observer = new MutationObserver(removeGoogleElements);
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true 
+    });
+
+    // Cleanup function
+    return () => {
+      observer.disconnect();
+      document.body.removeChild(script);
+      document.head.removeChild(style);
+      delete window.googleTranslateElementInit;
+    };
   }, []);
 
-  const handleLanguageChange = (event) => {
-    if (!isLoaded) {
-      alert("Google Translate is still loading, please wait...");
-      return;
-    }
-
-    const selectedLanguage = event.target.value;
-
-    if (selectedLanguage === "en") {
-      window.location.reload(); // Reset to English
-      return;
-    }
-
-    const googleTranslateFrame = document.querySelector(".goog-te-menu-frame");
-    if (!googleTranslateFrame) {
-      alert("Google Translate is not loaded yet. Try again in a few seconds.");
-      return;
-    }
-
-    const translateMenu =
-      googleTranslateFrame.contentDocument || googleTranslateFrame.contentWindow.document;
-    const langLink = translateMenu.querySelector(`a[lang="${selectedLanguage}"]`);
-    if (langLink) langLink.click();
-  };
-
   return (
-    <div className="flex flex-col items-center space-y-2">
-      {/* Language Selector Dropdown */}
-      <select
-        onChange={handleLanguageChange}
-        className="border rounded-lg p-2 shadow-md"
-      >
-        <option value="en">English (Default)</option>
-        <option value="hi">हिन्दी (Hindi)</option>
-        <option value="bn">বাংলা (Bengali)</option>
-        <option value="ta">தமிழ் (Tamil)</option>
-        <option value="te">తెలుగు (Telugu)</option>
-        <option value="mr">मराठी (Marathi)</option>
-        <option value="gu">ગુજરાતી (Gujarati)</option>
-      </select>
-
-      {/* Google Translate Hidden Element */}
-      <div id="google_translate_element" style={{ display: "none" }}></div>
+    <div className="translate-container">
+      <div 
+        id="google-translate-element" 
+        className="translate-selector"
+      />
     </div>
   );
 };
 
-export default LanguageSwitcher;
+export default GoogleTranslate;

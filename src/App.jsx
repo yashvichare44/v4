@@ -19,13 +19,15 @@ import Hero from './components/schemes/components/Hero';
 import Dashboard from './components/homepage/dashboard';
 import SchemeFinderForm from './components/particular-scheme/Form';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import GoogleTranslate from './components/LanguageSwitcher';
+import LanguageSelector from './components/LanguageSwitcher';
 
 // Create a Layout component to handle the sidebar + content structure
 const DashboardLayout = ({ children }) => {
   return (
     <PremiumLeftNavbar>
       <div className="absolute top-4 right-4"> {/* Position dropdown in the dashboard */}
-        <LanguageSwitcher />
+        <GoogleTranslate/>
       </div>
       {children}
     </PremiumLeftNavbar>

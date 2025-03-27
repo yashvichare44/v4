@@ -6,7 +6,7 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS globally
 
 # Configure Gemini API
-genai.configure(api_key="")
+genai.configure(api_key="AIzaSyDI1Zeible2hRZVUaL-pH-YTMqPUaQE9gw")
 
 # System Prompt for Gemini AI
 SYSTEM_PROMPT = """
@@ -27,15 +27,17 @@ NAVIGATION_ROUTES = {
 
 # Function to generate AI response
 def get_gemini_response(user_input):
-    model = genai.GenerativeModel("gemini-1.5-pro-latest")  # Using the Gemini Pro model
-    
+    model = genai.GenerativeModel("gemini-1.5-pro-latest")  # Using Gemini Pro model
+
     # Check if input is a navigation request
     for key, route in NAVIGATION_ROUTES.items():
         if key in user_input.lower():
             return {"reply": f"Navigating to {route}", "route": route}
 
-    # Otherwise, use AI to generate a response
-    response = model.generate_content(SYSTEM_PROMPT + "\nUser Query: " + user_input)
+    # Use structured conversation for better responses
+    chat_session = model.start_chat(history=[])  
+    response = chat_session.send_message(user_input, system_instruction=SYSTEM_PROMPT)
+
     return {"reply": response.text.strip() if response else "I'm sorry, I couldn't process that request."}
 
 # Flask route for chatbot
